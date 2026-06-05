@@ -1,9 +1,12 @@
 /*
-РЈРјРѕРІР°: Р РѕР·СЂРѕР±РёС‚Рё СЃРёРјСѓР»СЏС‚РѕСЂ СЃРёСЃС‚РµРјРё РѕР±СЂРѕР±РєРё С„С–РЅР°РЅСЃРѕРІРёС… Р·Р°РјРѕРІР»РµРЅСЊ.
-РЎРёСЃС‚РµРјР° РјР°С” С‚СЂРё РѕСЃРЅРѕРІРЅС– РµС‚Р°РїРё:
-1. Р“РµРЅРµСЂР°С†С–СЏ (Producer)
-2. РћР±СЂРѕР±РєР° (Consumer)
-3. Р¤С–РЅР°Р»СЊРЅРёР№ Р—РІС–С‚ (Reporting)
+Умова: Розробити симулятор системи обробки фінансових замовлень.
+Система має три основні етапи:
+
+1. Генерація (Producer)
+
+2. Обробка (Consumer)
+
+3. Фінальний Звіт (Reporting)
 */
 #include <iostream>
 #include <queue>
@@ -15,7 +18,7 @@
 
 using namespace std;
 
-// РЎС‚СЂСѓРєС‚СѓСЂР° Р·Р°РјРѕРІР»РµРЅРЅСЏ
+// Структура замовлення
 struct Order
 {
 	int id;
@@ -23,7 +26,7 @@ struct Order
 	double price;
 };
 
-// Р“Р»РѕР±Р°Р»СЊРЅС– СЂРµСЃСѓСЂСЃРё
+// Глобальні ресурси
 queue<Order> order_queue;
 mutex queue_mtx;
 condition_variable cv_order;
@@ -33,13 +36,14 @@ const int TOTAL_ORDERS_TO_PROCESS = 15;
 
 atomic<bool> producers_finished(false);
 
-// Р—Р°РіР°Р»СЊРЅРёР№ РґРѕС…С–Рґ
-double final_total_revenue (0.0);
+// Загальний дохід
+double final_total_revenue = 0.0;
 mutex revenue_mtx;
 
 void producer(int client_id, int orders_to_generate)
 {
-	cout << "Client [" << client_id << "] creating " << orders_to_generate << " orders.\n";
+	cout << "Client [" << client_id << "] creating "
+		<< orders_to_generate << " orders.\n";
 
 	for (int i = 0; i < orders_to_generate; ++i)
 	{
@@ -52,7 +56,8 @@ void producer(int client_id, int orders_to_generate)
 		{
 			lock_guard<mutex> lock(queue_mtx);
 			order_queue.push(order);
-			cout << "Client [" << client_id << "] added order #" << order.id << "\n";
+			cout << "Client [" << client_id
+				<< "] added order #" << order.id << "\n";
 		}
 
 		cv_order.notify_one();
@@ -105,6 +110,7 @@ void consumer(int worker_id)
     }
 }
 
+// Reporting
 int main()
 {
     srand(time(NULL));
